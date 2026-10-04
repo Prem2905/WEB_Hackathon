@@ -166,6 +166,7 @@ export default function AdminPanel() {
               <option>AI & Web3</option>
               <option>HealthTech</option>
               <option>FinTech</option>
+              <option>Agriculture</option>
               <option>Disaster Management</option>
               <option>Blockchain & Cybersecurity</option>
               <option>E-Governance</option>
