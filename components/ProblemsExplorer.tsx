@@ -1,5 +1,6 @@
- "use client";
+"use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type Problem = {
@@ -11,36 +12,117 @@ type Problem = {
   tags: string[] | null;
 };
 
-export default function ProblemsExplorer({ problems }: { problems: Problem[] }) {
+export default function ProblemsExplorer({
+  problems,
+}: {
+  problems: Problem[];
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
-  const categories = ["All", ...Array.from(new Set(problems.map(p => p.category)))];
 
-  const filtered = useMemo(() => problems.filter(p => {
-    const haystack = [p.title, p.description, p.category, ...(p.tags ?? [])].join(" ").toLowerCase();
-    return haystack.includes(query.toLowerCase()) && (category === "All" || p.category === category);
-  }), [problems, query, category]);
+  const categories = [
+    "All",
+    ...Array.from(new Set(problems.map((p) => p.category))),
+  ];
+
+  const filtered = useMemo(() => {
+    return problems.filter((p) => {
+      const text = [p.title, p.description, p.category, ...(p.tags ?? [])]
+        .join(" ")
+        .toLowerCase();
+
+      return (
+        text.includes(query.toLowerCase()) &&
+        (category === "All" || p.category === category)
+      );
+    });
+  }, [problems, query, category]);
 
   return (
     <>
-      <div className="filters">
-        <input aria-label="Search problems" placeholder="Search problem statements..." value={query} onChange={e => setQuery(e.target.value)} />
-        <select aria-label="Filter category" value={category} onChange={e => setCategory(e.target.value)}>
-          {categories.map(c => <option key={c}>{c}</option>)}
+      {/* Search */}
+      <div className="problem-toolbar">
+        <div className="search-box">
+          <span>⌕</span>
+
+          <input
+            type="text"
+            placeholder="Search challenges..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+
+          {query && <button onClick={() => setQuery("")}>×</button>}
+        </div>
+
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          {categories.map((item) => (
+            <option key={item}>{item}</option>
+          ))}
         </select>
       </div>
-      <p className="result-count">{filtered.length} challenge{filtered.length === 1 ? "" : "s"}</p>
-      <div className="problem-grid large">
-        {filtered.map(p => (
-          <article className="problem-card" id={p.id} key={p.id}>
-            <div className="card-top"><span className="tag">{p.category}</span><span>{p.difficulty}</span></div>
-            <h2>{p.title}</h2>
-            <p>{p.description}</p>
-            <div className="tags">{(p.tags ?? []).map(t => <span key={t}>#{t}</span>)}</div>
+
+      {/* Result information */}
+      <div className="problem-results">
+        <div>
+          <strong>{filtered.length}</strong>{" "}
+          {filtered.length === 1 ? "challenge" : "challenges"} available
+        </div>
+
+        {category !== "All" && (
+          <button className="clear-filter" onClick={() => setCategory("All")}>
+            Clear filter
+          </button>
+        )}
+      </div>
+
+      {/* Cards */}
+      <div className="challenge-grid">
+        {filtered.map((problem, index) => (
+          <article className="challenge-card" key={problem.id}>
+            <div className="challenge-top">
+              <div className="challenge-number">
+                #{String(index + 1).padStart(2, "0")}
+              </div>
+
+              <span
+                className={`difficulty ${problem.difficulty
+                  .toLowerCase()
+                  .replace(" ", "-")}`}
+              >
+                {problem.difficulty}
+              </span>
+            </div>
+
+            <div className="category-label">{problem.category}</div>
+
+            <h2>{problem.title}</h2>
+
+            <p>{problem.description}</p>
+
+            <div className="challenge-tags">
+              {(problem.tags ?? []).map((tag) => (
+                <span key={tag}>#{tag}</span>
+              ))}
+            </div>
+
+            <div className="challenge-footer">
+              <Link href={`/problems/${problem.id}`}>
+                View Challenge
+                <span>→</span>
+              </Link>
+            </div>
           </article>
         ))}
       </div>
-      {filtered.length === 0 && <div className="empty-card">No matching problems. Try another search or category.</div>}
+
+      {filtered.length === 0 && (
+        <div className="no-results">
+          <div className="no-results-icon">⌕</div>
+          <h3>No challenges found</h3>
+          <p>Try a different search term or remove the category filter.</p>
+        </div>
+      )}
     </>
   );
 }
